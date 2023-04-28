@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="system\material\local_object\" />
+    <Folder Include="system\material\objects\description\access\get\" />
+    <Folder Include="system\material\running\" />
+    <Folder Include="system\objects\controller\" />
+    <Folder Include="system\objects\main\information\description\get\" />
+    <Folder Include="system\objects\main\manager\objects\description\activity\" />
+    <Folder Include="system\objects\main\objects\managers\func\" />
+    <Folder Include="system\objects\main\value\local\Новая папка\" />
+    <Folder Include="system\objects\poll\data\ticket\subscribe\" />
+    <Folder Include="system\objects\poll\objects\poll\manager\elastic\" />
+    <Folder Include="system\objects\thread\objects\main\objects\" />
+  </ItemGroup>
+
+</Project>
