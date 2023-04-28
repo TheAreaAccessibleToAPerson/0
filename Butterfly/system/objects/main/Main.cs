@@ -406,21 +406,21 @@
         /// + <typeparamref name="ReturnValueType"/>.GetType.FullName .
         /// </summary>
         /// <returns></returns>
-        protected objects.description.IRestream<ReceiveValueType, IEchoReturn<ReturnValueType>> echo
+        protected objects.description.IRestream<ReceiveValueType, IEchoReturn<ReturnValueType>> listen_echo
             <ReceiveValueType, ReturnValueType>(string pEchoName = "")
         {
             return GlobalObjectsManager.CreatingEcho<ReceiveValueType, ReturnValueType>(pEchoName);
         }
 
         /// <summary>
-        /// Глобаное эхо. Доступно для всех дочерних обьектов через сигнаруные методы async_...._to_echo().
+        /// Глобаное эхо. Доступно для всех дочерних обьектов через сигнаруные методы async_...._to_echo() или .
         /// Создайте локальный класс подлкючите к нему интерфейс ILocalObject.ReceiveEcho[<typeparamref name="ValueType"/>], после явно  укажите метод
         /// который реализует данный интерфейс с помощью .output_to(l_obj[LocalObject]().ReceiveEcho).
         /// При создании одинаковых глобальных echo задайте им имена, иначе может произойти ошибка времени сборки.
         /// Если имя не задать явно, то его менем станет GetType().FullName текущего обьекта + <typeparamref name="ValueType"/>.GetType().FullName .
         /// </summary>
         /// <returns></returns>
-        protected objects.description.IRestream<ValueType, IEchoReturn<ValueType>> echo<ValueType>
+        protected objects.description.IRestream<ValueType, IEchoReturn<ValueType>> listen_echo<ValueType>
             (string pEchoName = "")
         {
             return GlobalObjectsManager.CreatingEcho<ValueType, ValueType>(pEchoName);

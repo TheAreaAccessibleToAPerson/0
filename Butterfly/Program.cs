@@ -30,7 +30,7 @@
                     create_object<TestController2>(u++.ToString(), errorLocalValue + 100);
                 });
 
-            echo<string>()
+            listen_echo<string>()
                 .output_to((value, returnResult) =>
                 {
                     Console($"Получение значение в echo:{value} от клиента с ID:{returnResult.GetObjectID()}.");
@@ -42,7 +42,7 @@
                               // и если все клинты отпишутся из него отчего он окажется пустым, пул уничтожится.
                               // В данный момент не релизовано равномерное распределение клинтов между пулами.
 
-            echo<string, int>() // Сдесь примим данные из echo.
+            listen_echo<string, int>() // Сдесь примим данные из echo.
                 .output_to((value, returnResult) => 
                 { 
                     if (value == "Input1")
@@ -55,6 +55,11 @@
                     }
                 });
 
+            listen_echo<int>()
+                .output_to((number, returnResult) => 
+                {
+                    returnResult.To(222);
+                });
         }
 
         
@@ -68,10 +73,10 @@
         int u = 0;
         void CreatingControllers() // Создадим билибирдень.
         {
-            if (u < 55) // Создадим 50 индивидуальных обьектов. При вызове метода destroy() в нем или его дочерних обьектах
+            if (u < 1) // Создадим 50 индивидуальных обьектов. При вызове метода destroy() в нем или его дочерних обьектах
                         // произойдет уничтожение плодь до данного обьекта TestController2 ...
             {
-                for (int i = 0; i < 555; i++)
+                for (int i = 0; i < 1; i++)
                 {
                     // так же передадим ему локальное значение.
                     create_object<TestController2>(u++.ToString(), i + 100);
@@ -96,10 +101,13 @@
     public class TestController2 : Controller.Local.value<int>.Independent
     {
         IInput<int> sendMesageErrorConfigurate;
-
+        IInput<int> sendEchoToParent;
         protected override void Construction()
         {
             send_message<TestController, int>(ref sendMesageErrorConfigurate);
+
+            send_echo<TestController, int>(ref sendEchoToParent)
+                .output_to((number) => { Console("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"); });
 
             // Подпишимся на рассылку сообщений, это можно было бы сделать
             // из самого обработчика, но в данном контексте обработчик используется
@@ -114,7 +122,7 @@
 
         void Start()
         {
-
+            sendEchoToParent.ToInput(localValue);
         }
 
         void Configurate() // Даный метод вызовется после метода Construction().
