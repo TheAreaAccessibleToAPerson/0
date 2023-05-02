@@ -3,7 +3,7 @@
     public class Object<ListenerValueType> : Informing, IInput<ListenerValueType>,
          objects.description.IRestream<ListenerValueType>
     {
-        private readonly handler.manager.action.Object<ListenerValueType> InputActionManager;
+        private readonly objects.manager.action.Object<ListenerValueType> InputActionManager;
 
         private readonly main.manager.handlers.description.access.add.IPrivate PrivateHandlersManager;
         private readonly main.manager.objects.description.access.get.IShared pSharedObjectsManager;
@@ -16,8 +16,8 @@
             main.description.access.add.IDependency pDependency) 
             : base("SendingListener_1", pInforming)
         {
-            InputActionManager = new handler.manager.action.Object<ListenerValueType>
-                (handler.manager.events.events.Type.Broker, pStateInformation, pNodeAccess, pPrivateHandlerManager, pSharedObjectsManager,
+            InputActionManager = new objects.manager.action.Object<ListenerValueType>
+                (pStateInformation, pNodeAccess, pPrivateHandlerManager, pSharedObjectsManager,
                 pDependency, pInforming, pPoll);
         }
 
@@ -25,7 +25,6 @@
         {
             InputActionManager.Action.Invoke(pValue);
         }
-
 
         objects.description.IRestream<ListenerValueType> objects.description.IRestream<ListenerValueType>.output_to
             (global::System.Action<ListenerValueType> pAction, int pPollSize = 0, int pTimeDelay = 0, string pPollName = "")
@@ -35,13 +34,15 @@
             return this;
         }
 
-        public objects.description.IRestream<OutputValueType> output_to<OutputValueType>(global::System.Func<ListenerValueType, OutputValueType> pFunc, int pPollSize = 0, int pTimeDelay = 0, string pPollName = "")
+        public objects.description.IRestream<OutputValueType> output_to<OutputValueType>
+            (global::System.Func<ListenerValueType, OutputValueType> pFunc, int pPollSize = 0, int pTimeDelay = 0, string pPollName = "")
         {
-            throw new System.NotImplementedException();
+            return InputActionManager.AddFunc(pFunc, pPollSize, pTimeDelay, pPollName);
         }
 
         public handler.description.IRestream output_to<PrivateHandlerType>(int pPollSize = 0, int pTimeDelay = 0, string pPollName = "") 
-            where PrivateHandlerType : main.Object, IInput, IInput<ListenerValueType>, handler.description.IRestream, handler.description.IRegisterInPoll, new()
+            where PrivateHandlerType : main.Object, IInput, IInput<ListenerValueType>, handler.description.IRestream, handler.description.IRegisterInPoll,
+            handler.description.IContinueInterrupting, new()
         {
             return InputActionManager.AddPrivateHandler<PrivateHandlerType>(pPollSize, pTimeDelay, pPollName);
         }
@@ -61,9 +62,12 @@
             throw new System.NotImplementedException();
         }
 
-        public objects.description.IRestream<ReturnValueType> output_to_echo<LocationEchoObjectType, ReturnValueType>(int pPollSize = 0, int pTimeDelay = 0, string pPollName = "") where LocationEchoObjectType : Object, new()
+        public objects.description.IRestream<ReturnValueType> output_to_echo<LocationEchoObjectType, ReturnValueType>(int pPollSize = 0, int pTimeDelay = 0, string pPollName = "") 
+            where LocationEchoObjectType : Object, new()
         {
-            throw new System.NotImplementedException();
+            return InputActionManager.AddConnectingToEcho<ListenerValueType, ReturnValueType>
+                    (typeof(LocationEchoObjectType).FullName + typeof(ListenerValueType).FullName + typeof(ReturnValueType).FullName,
+                    pPollSize, pTimeDelay, pPollName);
         }
     }
 }

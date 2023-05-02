@@ -28,11 +28,10 @@
             main.manager.objects.description.access.get.IShared pSharedObjectsManagerAccess, 
             main.description.access.add.IDependency pDependencyAccess,
             main.IInforming pInforming, 
-            poll.description.access.add.IPoll pPollAccess, 
-            int pPollSize = 0, int pTimeDelay = 0, string pPollName = "") 
+            poll.description.access.add.IPoll pPollAccess) 
             : base("ActionValue_1", pInforming)
         {
-            EventsManager = new events.Object<ParamType>(pCreatorType);
+            EventsManager = new events.Object<ParamType>(pInforming, pCreatorType);
 
             IsContinueInterrupting = false;
 
@@ -46,11 +45,9 @@
 
             // Устанавливаем по умолчанию стандартный способ работы с данными(передача далее по цепочке).
             Action = DefaultInput;
-
-            RegisterInPoll(pPollSize, pTimeDelay, pPollName);
         }
 
-        public Object(events.events.Type pCreatorType, 
+        public Object(events.events.Type pCreatorType,
             global::System.Action<int> pContinueExecutingEvents, int NumberOfTheInterruptedEvent, 
             main.information.State pStateInformation,
             main.information.description.access.get.INode pNodeAccess,
@@ -58,11 +55,10 @@
             main.manager.objects.description.access.get.IShared pSharedObjectsManagerAccess,
             main.description.access.add.IDependency pDependencyAccess,
             main.IInforming pInforming,
-            poll.description.access.add.IPoll pPollAccess,
-            int pPollSize = 0, int pTimeDelay = 0, string pPollName = "")
+            poll.description.access.add.IPoll pPollAccess)
             : base("ActionValue_1", pInforming)
         {
-            EventsManager = new events.Object<ParamType>(pCreatorType, pContinueExecutingEvents, NumberOfTheInterruptedEvent);
+            EventsManager = new events.Object<ParamType>(pInforming, pCreatorType, pContinueExecutingEvents, NumberOfTheInterruptedEvent);
 
             IsContinueInterrupting = true;
 
@@ -76,8 +72,6 @@
 
             // Устанавливаем по умолчанию стандартный способ работы с данными(передача далее по цепочке).
             Action = DefaultInput;
-
-            RegisterInPoll(pPollSize, pTimeDelay, pPollName);
         }
 
         // Теперь, обькт принимает данные и записывает их в хранилище.
@@ -132,32 +126,47 @@
             }
         }
 
-        public void AddAction(global::System.Action<ParamType> pAction, int pPollSize, int pTimeDelay, string pPollName)
+        public handler.description.IRestream<ParamType> AddAction
+            (global::System.Action<ParamType> pAction, int pPollSize, int pTimeDelay, string pPollName)
         {
             if (StateInformation.__IsCreating || StateInformation.__IsOccurrence)
             {
                 IsContinueInterrupting = false;
 
-                objects.action.Object<ParamType> actionObject = new objects.action.Object<ParamType>(pAction, DependencyAccess,
-                    PollAccess, pPollSize, pTimeDelay, pPollName);
+                objects.action.Object<ParamType>  actionObject = new objects.action.Object<ParamType>(pAction,
+                        EventsManager.ContinueExecutingEvents, EventsManager.NumberOfTheInterruptedEvent,
+                            Informing, StateInformation, NodeAccess, PrivateHandlerManagerAccess,
+                                SharedObjectsManagerAccess, PollAccess, DependencyAccess, pPollSize, pTimeDelay, pPollName);
 
-                EventsManager.Add(events.Object<ParamType>.Type.Continue, actionObject.ToInput);
+                EventsManager.Add(events.Object<ParamType>.Type.Break, actionObject.ToInput);
+
+                return actionObject;
             }
             else
                 Exception(Ex.ActionValue.x10001, pAction.GetType().FullName);
+
+            return default;
         }
 
-        public void AddActionIsAsync(global::System.Action<ParamType> pAction, int pPollSize, int pTimeDelay, string pPollName)
+        public handler.description.IRestream<ParamType> AddActionIsAsync
+            (global::System.Action<ParamType> pAction, int pPollSize, int pTimeDelay, string pPollName)
         {
             if (StateInformation.__IsCreating || StateInformation.__IsOccurrence)
             {
-                objects.action.Object<ParamType> actionObject = new objects.action.Object<ParamType>(pAction, DependencyAccess,
-                    PollAccess, pPollSize, pTimeDelay, pPollName);
+                IsContinueInterrupting = false;
 
-                EventsManager.Add(events.Object<ParamType>.Type.Break, actionObject.ToInput);
+                objects.action.Object<ParamType> actionObject = new objects.action.Object<ParamType>(pAction,
+                            Informing, StateInformation, NodeAccess, PrivateHandlerManagerAccess,
+                                SharedObjectsManagerAccess, PollAccess, DependencyAccess, pPollSize, pTimeDelay, pPollName);
+
+                EventsManager.Add(events.Object<ParamType>.Type.Continue, actionObject.ToInput);
+
+                return actionObject;
             }
             else
                 Exception(Ex.ActionValue.x10001, pAction.GetType().FullName);
+
+            return default;
         }
 
         /// <summary>
@@ -165,35 +174,64 @@
         /// (c проверкой на сооветсвие типа) все входящие данные.
         /// Используется только когда MainObject находится в состоянии __IsCreating.
         /// </summary>
-        public void AddActionIsType<InputValueType>(global::System.Action<InputValueType> pAction,
-            int pPollSize, int pTimeDelay, string pPollName)
+        public handler.description.IRestream AddActionIsType<InputValueType>
+            (global::System.Action<InputValueType> pAction, int pPollSize, int pTimeDelay, string pPollName)
         {
             if (StateInformation.__IsCreating || StateInformation.__IsOccurrence)
             {
-                objects.action.Object<InputValueType> actionObject = new objects.action.Object<InputValueType>
-                    (pAction, DependencyAccess, PollAccess, pPollSize, pTimeDelay, pPollName);
-                
+                objects.action.Object<InputValueType> actionObject;
+
+                actionObject = new objects.action.Object<InputValueType>(pAction,
+                        EventsManager.ContinueExecutingEvents, EventsManager.NumberOfTheInterruptedEvent,
+                            Informing, StateInformation, NodeAccess, PrivateHandlerManagerAccess,
+                                SharedObjectsManagerAccess, PollAccess, DependencyAccess, pPollSize, pTimeDelay, pPollName);
+
+                IsContinueInterrupting = false;
+
                 if (actionObject is IInput<ParamType> actionObjectReduse)
                 {
-                    EventsManager.Add(events.Object<ParamType>.Type.Continue, actionObjectReduse.ToInput);
+                    EventsManager.Add(events.Object<ParamType>.Type.Break, actionObjectReduse.ToInput);
                 }
                 else
                     Exception(Ex.ActionValue.x10008, typeof(ParamType).FullName, actionObject.Name);
+
+                return actionObject;
             }
             else
                 Exception(Ex.ActionValue.x10007, pAction.GetType().FullName);
+
+            return default;
         }
 
-        public description.IRestream<OutputValueType> AddFunc<OutputValueType>(global::System.Func<ParamType, OutputValueType> pFunc,
-            int pPollSize, int pTimeDelay, string pPollName)
+        public description.IRestream<OutputValueType> AddFunc<OutputValueType>
+            (global::System.Func<ParamType, OutputValueType> pFunc, int pPollSize, int pTimeDelay, string pPollName)
         {
-            IsContinueInterrupting = false;
-
             if (StateInformation.__IsCreating || StateInformation.__IsOccurrence)
             {
+                IsContinueInterrupting = false;
+
                 objects.func.Object<ParamType, OutputValueType> funcObject = new objects.func.Object<ParamType, OutputValueType>
                     (pFunc, EventsManager.ContinueExecutingEvents, EventsManager.NumberOfTheInterruptedEvent,
                     Informing, StateInformation, NodeAccess, PrivateHandlerManagerAccess, 
+                    SharedObjectsManagerAccess, PollAccess, DependencyAccess, pPollSize, pTimeDelay, pPollName);
+
+                EventsManager.Add(events.Object<ParamType>.Type.Break, funcObject.ToInput);
+
+                return funcObject;
+            }
+            else
+                Exception(Ex.ActionValue.x10001, pFunc.GetType().FullName);
+
+            return default;
+        }
+
+        public description.IAsyncRestream<OutputValueType> AddFuncIsAsync<OutputValueType>
+            (global::System.Func<ParamType, OutputValueType> pFunc, int pPollSize, int pTimeDelay, string pPollName)
+        {
+            if (StateInformation.__IsCreating || StateInformation.__IsOccurrence)
+            {
+                objects.func.Object<ParamType, OutputValueType> funcObject = new objects.func.Object<ParamType, OutputValueType>
+                    (pFunc, Informing, StateInformation, NodeAccess, PrivateHandlerManagerAccess,
                     SharedObjectsManagerAccess, PollAccess, DependencyAccess, pPollSize, pTimeDelay, pPollName);
 
                 EventsManager.Add(events.Object<ParamType>.Type.Continue, funcObject.ToInput);
@@ -207,11 +245,46 @@
         }
 
         public description.IRestream AddPrivateHandler<PrivateHandlerType>(int pPollSize, int pTimeDelay, string pPollName) 
-            where PrivateHandlerType : main.Object, IInput, IInput<ParamType>, description.IRestream, description.IRegisterInPoll, 
-                new()
+            where PrivateHandlerType : main.Object, IInput, IInput<ParamType>, description.IRestream, description.IRegisterInPoll,
+                handler.description.IContinueInterrupting, new()
         {
-            IsContinueInterrupting = false;
+            if (StateInformation.__IsCreating || StateInformation.__IsOccurrence)
+            {
+                PrivateHandlerType handler;
+                
+                if (IsContinueInterrupting)
+                {
+                    handler = PrivateHandlerManagerAccess.Add<PrivateHandlerType>
+                        (EventsManager.ContinueExecutingEvents, EventsManager.NumberOfTheInterruptedEvent);
+                }
+                else
+                {
+                    handler = PrivateHandlerManagerAccess.Add<PrivateHandlerType>();
+                }
 
+                IsContinueInterrupting = false;
+
+                if (handler != null)
+                {
+                    handler.RegisterInPoll(pPollSize, pTimeDelay, pPollName);
+
+                    EventsManager.Add(events.Object<ParamType>.Type.Break, handler.ToInput);
+                }
+                else
+                    Exception(Ex.ActionValue.x10009, typeof(PrivateHandlerType).FullName);
+                
+                return handler;
+            }
+            else
+                Exception(Ex.ActionValue.x10001, typeof(PrivateHandlerType).FullName);
+
+            return default;
+        }
+
+        public description.IRestream AddPrivateHandlerIsAsync<PrivateHandlerType>(int pPollSize, int pTimeDelay, string pPollName)
+            where PrivateHandlerType : main.Object, IInput, IInput<ParamType>, description.IRestream, description.IRegisterInPoll,
+                handler.description.IContinueInterrupting, new()
+        {
             if (StateInformation.__IsCreating || StateInformation.__IsOccurrence)
             {
                 PrivateHandlerType handler = PrivateHandlerManagerAccess.Add<PrivateHandlerType>();
@@ -224,11 +297,43 @@
                 }
                 else
                     Exception(Ex.ActionValue.x10009, typeof(PrivateHandlerType).FullName);
-                
+
                 return handler;
             }
             else
                 Exception(Ex.ActionValue.x10001, typeof(PrivateHandlerType).FullName);
+
+            return default;
+        }
+
+        /// <summary>
+        /// Создает приватный обработчик, устанавливает прямой доступ в <typeparamref name="PrivateHandlerType"/> 
+        /// </summary>
+        /// <typeparam name="PrivateHandlerType"></typeparam>
+        /// <returns></returns>
+        public description.IRestream AddPrivateHandlerIsType<PrivateHandlerType>
+            (int pPollSize, int pTimeDelay, string pPollName)
+            where PrivateHandlerType : main.Object, description.IRestream, IInput, description.IRegisterInPoll,
+            handler.description.IContinueInterrupting, new()
+        {
+            if (StateInformation.__IsCreating || StateInformation.__IsOccurrence)
+            {
+                PrivateHandlerType privateHandler = PrivateHandlerManagerAccess.Add<PrivateHandlerType>
+                        (EventsManager.ContinueExecutingEvents, EventsManager.NumberOfTheInterruptedEvent);
+
+                IsContinueInterrupting = false;
+
+                if (privateHandler is IInput<ParamType> privateHandlerReduse)
+                {
+                    EventsManager.Add(events.Object<ParamType>.Type.Break, privateHandlerReduse.ToInput);
+                }
+                else
+                    Exception(Ex.ActionValue.x10008, typeof(ParamType).FullName, typeof(PrivateHandlerType).FullName);
+
+                return privateHandler;
+            }
+            else
+                Exception(Ex.ActionValue.x10007, typeof(PrivateHandlerType).FullName);
 
             return default;
         }
@@ -242,10 +347,10 @@
             (global::System.Func<InputValueType, OutputValueType> pFunc, 
                 int pPollSize, int pTimeDelay, string pPollName)
         {
-            IsContinueInterrupting = false;
-
             if (StateInformation.__IsCreating || StateInformation.__IsOccurrence)
             {
+                IsContinueInterrupting = false;
+
                 objects.func.Object<InputValueType, OutputValueType> funcObject 
                     = new objects.func.Object<InputValueType, OutputValueType>
                     (pFunc, EventsManager.ContinueExecutingEvents, EventsManager.NumberOfTheInterruptedEvent, 
@@ -254,7 +359,7 @@
 
                 if (funcObject is IInput<ParamType> funcObjectReduse)
                 {
-                    EventsManager.Add(events.Object<ParamType>.Type.Continue, funcObjectReduse.ToInput);
+                    EventsManager.Add(events.Object<ParamType>.Type.Break, funcObjectReduse.ToInput);
                 }
                 else
                     Exception(Ex.ActionValue.x10008, typeof(ParamType).FullName, funcObject.Name);
@@ -266,6 +371,7 @@
 
             return default;
         }
+
         /// <summary>
         /// Создает обьект для Func'<typeparamref name="ParamType"/>','<typeparamref name="OutputValueType"/> и перенаправляет
         /// данные в его метод ToInput'<typeparamref name="ParamType"/>'.
@@ -275,16 +381,16 @@
             main.manager.handlers.description.access.add.IPrivate pPrivateHandlerManagerAccess, 
             int pPollSize, int pTimeDelay, string pPollName)
         {
-            IsContinueInterrupting = false;
-
             if (StateInformation.__IsCreating || StateInformation.__IsOccurrence)
             {
+                IsContinueInterrupting = false;
+
                 objects.func.Object<ParamType, OutputValueType> funcObject = new objects.func.Object<ParamType, OutputValueType>
                     (pFunc, EventsManager.ContinueExecutingEvents, EventsManager.NumberOfTheInterruptedEvent,
                     Informing, StateInformation, NodeAccess, pPrivateHandlerManagerAccess, SharedObjectsManagerAccess, 
                     PollAccess, DependencyAccess, pPollSize, pTimeDelay, pPollName);
 
-                EventsManager.Add(events.Object<ParamType>.Type.Continue, funcObject.ToInput);
+                EventsManager.Add(events.Object<ParamType>.Type.Break, funcObject.ToInput);
 
                 return funcObject;
             }
@@ -293,36 +399,7 @@
 
             return default;
         }
-        /// <summary>
-        /// Создает приватный обработчик, устанавливает прямой доступ в <typeparamref name="PrivateHandlerType"/> 
-        /// </summary>
-        /// <typeparam name="PrivateHandlerType"></typeparam>
-        /// <returns></returns>
-        public description.IRestream AddPrivateHandlerIsType<PrivateHandlerType>
-            (int pPollSize, int pTimeDelay, string pPollName)
-            where PrivateHandlerType : main.Object, description.IRestream, IInput, description.IRegisterInPoll, new()
-        {
-            IsContinueInterrupting = false;
-
-            if (StateInformation.__IsCreating || StateInformation.__IsOccurrence)
-            {
-                PrivateHandlerType privateHandler = PrivateHandlerManagerAccess.Add<PrivateHandlerType>();
-
-                if (privateHandler is IInput<ParamType> privateHandlerReduse)
-                {
-                    EventsManager.Add(events.Object<ParamType>.Type.Continue, privateHandlerReduse.ToInput);
-                }
-                else
-                    Exception(Ex.ActionValue.x10008, typeof(ParamType).FullName, typeof(PrivateHandlerType).FullName);
-
-                return privateHandler;
-            }
-            else
-                Exception(Ex.ActionValue.x10007, typeof(PrivateHandlerType).FullName);
-
-            return default;
-        }
-
+        
         #region Соединение с echo. Ответ будет содержать другие типы данных отличные от отпровляемых.
 
         /// <summary>
@@ -334,8 +411,6 @@
         public description.IAsyncRestream<ReturnValueType> AddConnectingToAsyncEcho<ReceiveValueType, ReturnValueType>(string pEchoName,
             int pPollSize, int pTimeDelay, string pPollName)
         {
-            IsContinueInterrupting = false;
-
             return CreatingConnectingToEcho<ReceiveValueType, ReturnValueType>
                 (pEchoName, events.Object<ParamType>.Type.Continue,
                     pPollSize, pTimeDelay, pPollName);
@@ -374,15 +449,15 @@
                     {
                         objects.echo.Object<ReceiveValueType, ReturnValueType>.Type echoType = default;
                         {
-                            if (pWorkEchoType == events.Object<ParamType>.Type.Continue)
-                                echoType = objects.echo.Object<ReceiveValueType, ReturnValueType>.Type.Continue;
-                            else if (pWorkEchoType == events.Object<ParamType>.Type.Break)
-                            {
+                            if (pWorkEchoType == events.Object<ParamType>.Type.Break)
                                 echoType = objects.echo.Object<ReceiveValueType, ReturnValueType>.Type.Break;
+                            else if (pWorkEchoType == events.Object<ParamType>.Type.Continue)
+                            {
+                                echoType = objects.echo.Object<ReceiveValueType, ReturnValueType>.Type.Continue;
                             }
                             else
                                 Exception(Ex.ActionValue.x10005, pWorkEchoType,
-                                    events.Object<ReturnValueType>.Type.Continue, events.Object<ReturnValueType>.Type.Break);
+                                    events.Object<ReturnValueType>.Type.Break, events.Object<ReturnValueType>.Type.Continue);
                         }
 
                         // Создаем echo для обратной связи.

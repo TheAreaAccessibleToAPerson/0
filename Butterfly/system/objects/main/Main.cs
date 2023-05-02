@@ -89,9 +89,10 @@
             MainObjectsManager.DeferredAddNode<MainObjectType>(pKey, pLocalValueObject);
         }
 
-        void manager.objects.description.access.remove.IMain.Remove<MainObjectType>(string pKey)
+        protected bool try_delete_object<MainObjectType>(string pKey)
+            where MainObjectType : Object, new()
         {
-            MainObjectsManager.Remove<MainObjectType>(pKey);
+            return MainObjectsManager.TryDeleteNode<MainObjectType>(pKey);
         }
 
         void manager.objects.description.access.remove.IMain.Remove(string pKey, global::System.Type pType)
@@ -169,6 +170,12 @@
         private manager.handlers.Private PrivateHandlersManager;
 
         void description.activity.IBranch.RemovePrivateHandler() => PrivateHandlersManager.Remove();
+
+        PrivateHandlerType manager.handlers.description.access.add.IPrivate.Add<PrivateHandlerType>
+            (global::System.Action<int> pContinueExecutingEvents, int pNumberOfTheInterruptedEvent)
+        {
+            return PrivateHandlersManager.Add<PrivateHandlerType>(pContinueExecutingEvents, pNumberOfTheInterruptedEvent);
+        }
 
         PrivateHandlerType manager.handlers.description.access.add.IPrivate.Add<PrivateHandlerType>()
         {
@@ -609,8 +616,22 @@
 
         public void Console(string pMessage)
         {
-            System.Console.ForegroundColor = System.ConsoleColor.White;
-            System.Console.WriteLine(HeaderInformation.ExplorerFullInformation + "[ " + pMessage + " ]");
+            global::System.Console.ForegroundColor = System.ConsoleColor.White;
+            global::System.Console.WriteLine(HeaderInformation.ExplorerFullInformation + "[ " + pMessage + " ]");
+        }
+
+        public void ConsoleLine(string pMessage)
+        {
+            global::System.Console.ForegroundColor = System.ConsoleColor.White;
+            global::System.Console.Write(HeaderInformation.ExplorerFullInformation + "[ " + pMessage + " ]");
+        }
+
+        public string ReadLine(string pMessage = "")
+        {
+            global::System.Console.ForegroundColor = System.ConsoleColor.White;
+            global::System.Console.Write(HeaderInformation.ExplorerFullInformation + "/" + pMessage);
+
+            return global::System.Console.ReadLine(); 
         }
 
         public void RuntimeError(string pMessage)

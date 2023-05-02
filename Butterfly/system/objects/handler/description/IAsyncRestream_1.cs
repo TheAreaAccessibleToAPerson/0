@@ -28,7 +28,7 @@
         /// </summary>
         /// <returns></returns>
         public IRestream await<PrivateHandlerType>(int pPollSize = 0, int pTimeDelay = 0, string pPollName = "")
-            where PrivateHandlerType : main.Object, IRestream, IInput, IInput<ValueType>, IRegisterInPoll, new();
+            where PrivateHandlerType : main.Object, IRestream, IInput, IInput<ValueType>, IRegisterInPoll, handler.description.IContinueInterrupting, new();
 
         /// <summary>
         /// Перенаправляет данные <typeparamref name="ValueType"/> в публичный обработчик <typeparamref name="PublicHandlerType"/>.

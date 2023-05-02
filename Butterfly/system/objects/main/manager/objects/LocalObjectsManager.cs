@@ -85,7 +85,7 @@
                         {
                             localObjectName.Define(Informing);
                         }
-
+                        
                         Values.Add(pObjectName, localObject);
 
                         return localObject;
@@ -127,9 +127,10 @@
             System.Tuple<string, bool>[] result = null;
 
             if (Values == null) return result;
-
+            
             foreach (object localObject in Values)
             {
+                
                 string systemInformation = "";
 
                 if (localObject is ILocalObject.Start localObjectStartReduse)
@@ -143,8 +144,10 @@
                 }
                 else if (localObject is ILocalObject.Start.Before localObjectStartBeforeReduse)
                 {
+                    
                     if (typeof(ILocalObject.Start.Before).FullName == typeof(BeforeState).FullName)
                     {
+                        
                         systemInformation = "Start()";
 
                         localObjectStartBeforeReduse.Start();

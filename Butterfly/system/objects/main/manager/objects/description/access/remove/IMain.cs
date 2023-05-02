@@ -2,11 +2,6 @@
 {
     public interface IMain
     {
-        /// <summary>
-        /// Удаляет обьект по ключу и типу.
-        /// </summary>
-        /// <param name="pKey"></param>
-        public void Remove<MainObjectType>(string pKey);
 
         /// <summary>
         /// Удаляет обьект по ключу и типу.

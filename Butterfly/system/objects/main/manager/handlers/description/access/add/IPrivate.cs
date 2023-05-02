@@ -10,8 +10,11 @@
         /// </summary>
         /// <typeparam name="PrivateHandlerType"></typeparam>
         /// <returns></returns>
+        PrivateHandlerType Add<PrivateHandlerType>(global::System.Action<int> pContinueExecutingEvents, int pNumberOfTheInterruptedEvent)
+            where PrivateHandlerType : Object, handler.description.IRestream, IInput, handler.description.IContinueInterrupting, new();
+
         PrivateHandlerType Add<PrivateHandlerType>()
-            where PrivateHandlerType : Object, handler.description.IRestream, IInput, new();
+            where PrivateHandlerType : Object, handler.description.IRestream, IInput, handler.description.IContinueInterrupting, new();
 
         /// <summary>
         /// Добавить приватный обработчик, после этого вы несможете получить к нему прямой доступ.

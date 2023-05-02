@@ -1,20 +1,27 @@
 ﻿namespace Butterfly.system.objects.handler
 {
     public abstract class Object<InputType, OutputType> : Object<InputType>,
-        IInput<InputType>, IInput, description.IRestream<OutputType>, description.IRestream
+        IInput<InputType>, IInput, description.IRestream<OutputType>, description.IRestream, handler.description.IContinueInterrupting
     {
-        private readonly manager.action.Object<OutputType> OutputActionManager;
+        private manager.action.Object<OutputType> OutputActionManager;
 
         public Object()
         {
-            OutputActionManager = new manager.action.Object<OutputType>(manager.events.events.Type.Broker, StateInformation, 
+            OutputActionManager = new manager.action.Object<OutputType>(manager.events.events.Type.Creator, StateInformation, 
                 this, this, this, this, this, this);
+        }
+
+        void handler.description.IContinueInterrupting.Set(global::System.Action<int> pContinueExecutingEvents, int NumberOfTheInterruptedEvent)
+        {
+            OutputActionManager = new manager.action.Object<OutputType>(manager.events.events.Type.Creator,
+                pContinueExecutingEvents, NumberOfTheInterruptedEvent, StateInformation, this, this, this, this, this, this);
         }
 
         protected void output(OutputType pValue)
         {
             OutputActionManager.Action.Invoke(pValue);
         }
+
 
         /// <summary>
         /// Доставляет output данные <typeparamref name="OutputType"/> обработчика в global echo или в node echo <paramref name="pEchoName"/>
@@ -80,7 +87,7 @@
         protected description.IRestream output_to<PrivateHandlerType>
             (int pPollSize = 0, int pTimeDelay = 0, string pPollName = "")
             where PrivateHandlerType : main.Object, IInput<OutputType>, IInput, description.IRestream, 
-                description.IRegisterInPoll, new()
+                description.IRegisterInPoll, handler.description.IContinueInterrupting, new()
         {
             return OutputActionManager.AddPrivateHandler<PrivateHandlerType>(pPollSize, pTimeDelay, pPollName);
         }
@@ -93,9 +100,7 @@
         description.IRestream<OutputType> description.IRestream<OutputType>.output_to(global::System.Action<OutputType> pAction,
             int pPollSize = 0, int pTimeDelay = 0, string pPollName = "")
         {
-            OutputActionManager.AddAction(pAction, pPollSize, pTimeDelay, pPollName);
-
-            return this;
+            return OutputActionManager.AddAction(pAction, pPollSize, pTimeDelay, pPollName);
         }
         description.IRestream description.IRestream<OutputType>.output_to<PrivateHandlerType>
             (int pPollSize = 0, int pTimeDelay = 0, string pPollName = "")
@@ -115,9 +120,7 @@
         description.IRestream description.IRestream.output_to<InputValueType>(global::System.Action<InputValueType> pAction,
             int pPollSize = 0, int pTimeDelay = 0, string pPollName = "")
         {
-            OutputActionManager.AddActionIsType(pAction, pPollSize, pTimeDelay, pPollName);
-
-            return this;
+            return OutputActionManager.AddActionIsType(pAction, pPollSize, pTimeDelay, pPollName);
         }
         description.IRestream<OutputValueType> description.IRestream.output_to<InputValueType, OutputValueType>(global::System.Func<InputValueType, OutputValueType> pFunc,
             int pPollSize = 0, int pTimeDelay = 0, string pPollName = "")
@@ -161,6 +164,7 @@
         description.IRestream description.IRestream.await<ParamValueType>(global::System.Action<ParamValueType> pAction,
             int pPollSize = 0, int pTimeDelay = 0, string pPollName = "")
         {
+            
             OutputActionManager.AddActionIsType(pAction, pPollSize, pTimeDelay, pPollName);
 
             return this;

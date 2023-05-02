@@ -34,7 +34,6 @@
             public const string CONFIGURATE = "Configurate";
             public const string START = "Start";
             public const string STOP = "Stop";
-            public const string PAUSE = "Pause";
         }
 
         /// <summary>
@@ -601,7 +600,7 @@
 
         public void Destroy()
         {
-            lock(StateInformation.Locker)
+            lock (StateInformation.Locker)
             {
                 if (StateInformation.IsCreating || StateInformation.IsOccurrence)
                 {

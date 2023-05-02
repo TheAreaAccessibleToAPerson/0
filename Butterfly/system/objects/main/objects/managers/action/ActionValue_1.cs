@@ -156,6 +156,7 @@
 
         public handler.description.IRestream AddPrivateHandler<PrivateHandlerType>(int pPollSize, int pTimeDelay, string pPollName)
             where PrivateHandlerType : main.Object, IInput, IInput<ParamType>, handler.description.IRestream, handler.description.IRegisterInPoll,
+            handler.description.IContinueInterrupting,
                 new()
         {
             if (StateInformation.__IsCreating || StateInformation.__IsOccurrence)
@@ -269,7 +270,8 @@
         /// <returns></returns>
         public handler.description.IRestream AddPrivateHandlerIsType<PrivateHandlerType>
             (int pPollSize, int pTimeDelay, string pPollName)
-            where PrivateHandlerType : main.Object, handler.description.IRestream, IInput, handler.description.IRegisterInPoll, new()
+            where PrivateHandlerType : main.Object, handler.description.IRestream, IInput, handler.description.IRegisterInPoll,
+            handler.description.IContinueInterrupting, new()
         {
             if (StateInformation.__IsCreating || StateInformation.__IsOccurrence)
             {

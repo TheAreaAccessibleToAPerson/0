@@ -154,6 +154,22 @@
             return default;
         }
 
+        public PrivateHandlerType Add<PrivateHandlerType>(global::System.Action<int> pContinueExecutingEvents, int pNumberOfTheInterruptedEvent) 
+            where PrivateHandlerType : Object, handler.description.IRestream, handler.description.IContinueInterrupting, new()
+        {
+            if (InstantiatePrivateHandler(new PrivateHandlerType(), out PrivateHandlerType privateHandlerReduse))
+            {
+                Console("!!!!!!");
+                privateHandlerReduse.Set(pContinueExecutingEvents, pNumberOfTheInterruptedEvent);
+
+                return privateHandlerReduse;
+            }
+            else
+                Exception(Ex.MainObject.x10017, typeof(PrivateHandlerType).FullName);
+
+            return default;
+        }
+
         public PrivateHandlerType Add<PrivateHandlerType>(PrivateHandlerType pPrivateHandler) where PrivateHandlerType : Object, new()
         {
             if (InstantiatePrivateHandler(pPrivateHandler, out PrivateHandlerType privateHandlerReduse))

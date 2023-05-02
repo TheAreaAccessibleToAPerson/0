@@ -28,7 +28,7 @@
         /// Связь устанавливается через проверку на соответвие типа.
         /// </summary>
         public IRestream output_to<PrivateHandlerType>(int pPollSize = 0, int pTimeDelay = 0, string pPollName = "")
-            where PrivateHandlerType : main.Object, IInput, IRestream, IRegisterInPoll, new();
+            where PrivateHandlerType : main.Object, IInput, IRestream, IRegisterInPoll, handler.description.IContinueInterrupting, new();
 
         /// <summary>
         /// Используется в методе Construction().
@@ -81,7 +81,7 @@
         /// <typeparamref name="PrivateHandlerType"/>.
         /// </summary>
         public IRestream await<PrivateHandlerType>(int pPollSize = 0, int pTimeDelay = 0, string pPollName = "")
-            where PrivateHandlerType : main.Object, IInput, IRestream, IRegisterInPoll, new();
+            where PrivateHandlerType : main.Object, IInput, IRestream, IRegisterInPoll, handler.description.IContinueInterrupting, new();
 
 
         /// <summary>

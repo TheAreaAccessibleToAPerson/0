@@ -6,7 +6,7 @@
         /// Если обьекты будут создоватся во время выполнения программы то они будут записаны сюда
         /// и будут являтся Node обьектами.
         /// </summary>
-        private global::System.Collections.Generic.Dictionary<System.Tuple<string, System.Type>, Object> NodeValues;
+        private global::System.Collections.Generic.Dictionary<global::System.Tuple<string, global::System.Type>, Object> NodeValues;
 
         public int NodeCount
         {
@@ -269,6 +269,34 @@
             return default;
         }
 
+        public bool TryDeleteNode<MainObjectType>(string pKey)
+            where MainObjectType : Object, new()
+        {
+            
+            lock (StateInformation.Locker)
+            {
+                if (NodeValues == null || NodeValues.Count == 0)
+                {
+                    
+                    return false;
+                }
+                else
+                {
+                    if (NodeValues.TryGetValue(new global::System.Tuple<string, global::System.Type>(pKey, typeof(MainObjectType)), 
+                        out Object oObjects))
+                    {
+                        oObjects.destroy();
+                        
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+
         //1)Реализовать замену обьекта.
         private MainObjectType AddNode<MainObjectType>(MainObjectType pControllerObject, string pKey, object pLocalValue = null)
             where MainObjectType : Object, new()
@@ -285,11 +313,22 @@
                 // Системный node создает сам себя в себе, поэтому не нужно его записывать.
                 if (pControllerObject.HeaderInformation.IsSystemController() == false)
                 {
-                    CreatingNodeObjectCount++;
-
                     if (NodeValues == null) NodeValues = new System.Collections.Generic.Dictionary<System.Tuple<string, System.Type>, Object>();
 
-                    NodeValues.Add(new global::System.Tuple<string, global::System.Type>(pKey, pControllerObject.GetType()), pControllerObject);
+                    if (NodeValues.TryGetValue(new global::System.Tuple<string, global::System.Type>(pKey, pControllerObject.GetType()), out Object oObject))
+                    {
+                        oObject.destroy();
+
+                        NodeInformation.SystemAccess.AddActionInvoke(() => AddNode(pControllerObject, pKey, pLocalValue));
+
+                        return pControllerObject;
+                    }
+                    else
+                    {
+                        CreatingNodeObjectCount++;
+
+                        NodeValues.Add(new global::System.Tuple<string, global::System.Type>(pKey, pControllerObject.GetType()), pControllerObject);
+                    } 
                 }
 
                 NodeInformation.SystemAccess.AddActionInvoke(((main.description.activity.INode)pControllerObject).Create);
@@ -343,28 +382,12 @@
              
         }
 
-        public void Remove<MainObjectType>(string pKey)
-        {
-            if (NodeValues.Remove(new global::System.Tuple<string, global::System.Type>(pKey, typeof(MainObjectType)), out Object oObject))
-            {
-                // Если обьект останавливается, то при достижении нуля обьектов в Value, нужно продолжить уничтожение,
-                // в вверх в плодь но Independent обьекта.
-                if (CreatingNodeObjectCount == 0 && NodeValues.Count == 0 && StateInformation.IsDestroy)
-                {
-                    NodeInformation.SystemAccess.AddActionInvoke(((main.activity.description.ILife)NodeInformation.CurrentMainObject).Stop);
-                }
-            }   
-            else
-                Exception(Ex.MainObjectsManager.x10007, typeof(MainObjectType).FullName, pKey);
-        }
-
         public void Remove(string pKey, global::System.Type pType)
         {
             lock(StateInformation.Locker)
             {
                 if (NodeValues.Remove(new global::System.Tuple<string, global::System.Type>(pKey, pType), out Object oObject))
                 {
-                    //Console(NodeValues.Count.ToString());
                     // Если обьект останавливается, то при достижении нуля обьектов в Value, нужно продолжить уничтожение,
                     // в вверх в плодь но Independent обьекта.
                     if (CreatingNodeObjectCount == 0 && NodeValues.Count == 0 && StateInformation.IsDestroy)

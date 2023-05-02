@@ -26,10 +26,10 @@
         {
             /// <summary>
             /// Принимает данные <typeparamref name="ReceiveValueType"/>, 
-            /// после чего с помощью <paramref name="pSendResult"/> используя .To(in <typeparamref name="ReturnValueType"/>)
+            /// после чего с помощью <paramref name="send"/> используя .To(in <typeparamref name="ReturnValueType"/>)
             /// отправте данные обратно.
             /// </summary>
-            public void ReceiveEcho(ReceiveValueType pValue, IEchoReturn<ReturnValueType> pSendResult);
+            public void ReceiveEcho(ReceiveValueType value, IEchoReturn<ReturnValueType> send);
         }
 
         /// <summary>

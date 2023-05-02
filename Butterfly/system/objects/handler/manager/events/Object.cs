@@ -9,26 +9,27 @@
         }
     }
 
-    public class Object<ParamType>
+    public class Object<ParamType> : main.Informing
     {
         public struct Type
         {
             // Если не нужно обрывать выполнение ActionArray.
-            public const string Continue = "Continue";
+            public const string Break = "Break";
             // Если нужно оборвать выполнение всех событытий(ActionArray).
             // Незабудте делигировать продолжение выполнения ActionArray обьекту
             // который это сделал.
-            public const string Break = "Break";
+            public const string Continue = "Continue";
         }
 
         private global::System.Action<ParamType>[] ActionArray = new System.Action<ParamType>[0];
         private string[] ActionTypeArray = new string[0];
-        //public int ActionCount { private set; get; } = 0;
 
         // Необходимо для синхроной работы обработчика.
         // Данные значения передаются начиная с из input_to обработчика.
         public readonly global::System.Action<int> ContinueExecutingEvents;
         public int NumberOfTheInterruptedEvent { private set; get; }
+
+        private readonly object Locker = new object();
 
         /// <summary>
         /// Тип создателя. 
@@ -36,7 +37,8 @@
         /// </summary>
         private readonly events.Type CreatorType;
 
-        public Object(events.Type pCreatorType) 
+        public Object(main.IInforming pInforming, events.Type pCreatorType) 
+            : base("EventManager_1", pInforming)
         {
             CreatorType = pCreatorType;
 
@@ -44,7 +46,8 @@
             NumberOfTheInterruptedEvent = 0;
         }
 
-        public Object(events.Type pCreatorType, global::System.Action<int> pContinueExecutingEvents, int pNumberOfTheInterruptedEvent)
+        public Object(main.IInforming pInforming, events.Type pCreatorType, global::System.Action<int> pContinueExecutingEvents, int pNumberOfTheInterruptedEvent)
+            : base("EventManager_1", pInforming)
         {
             CreatorType = pCreatorType;
 
@@ -64,44 +67,52 @@
             ActionTypeArray = Hellper.ExpendArray(ActionTypeArray, pTransitionType);
             ActionArray = Hellper.ExpendArray(ActionArray, pAction);
 
-            if (CreatorType.HasFlag(events.Type.Creator)) NumberOfTheInterruptedEvent++;
+            NumberOfTheInterruptedEvent++;
         }
 
         public void Run(ParamType pValue)
         {
-            for (int i = 0; i < ActionArray.Length; i++)
+            lock(Locker)
             {
-                if (ActionTypeArray[i] == Type.Break)
+                for (int i = 0; i < ActionArray.Length; i++)
                 {
-                    QueueParamValue.Enqueue(pValue);
+                    if (ActionTypeArray[i] == Type.Break)
+                    {
+                        QueueParamValue.Enqueue(pValue);
+
+                        ActionArray[i].Invoke(pValue);
+
+                        return;
+                    }
 
                     ActionArray[i].Invoke(pValue);
-
-                    return;
                 }
-
-                ActionArray[i].Invoke(pValue);
             }
         }
 
         private void Run(int pStartIndex)
         {
-            if ((++pStartIndex) >= NumberOfTheInterruptedEvent) return;
-
-            ParamType param = QueueParamValue.Dequeue();
-
-            for (int i = pStartIndex; i < NumberOfTheInterruptedEvent; i++)
+            lock(Locker)
             {
-                if (ActionTypeArray[i] == Type.Break)
+                if ((pStartIndex + 1) > NumberOfTheInterruptedEvent || QueueParamValue.Count == 0) return;
+
+                ParamType param = QueueParamValue.Dequeue();
+
+                ++pStartIndex;
+
+                for (int i = pStartIndex; i < NumberOfTheInterruptedEvent; i++)
                 {
-                    QueueParamValue.Enqueue(param);
+                    if (ActionTypeArray[i] == Type.Break)
+                    {
+                        QueueParamValue.Enqueue(param);
+
+                        ActionArray[i].Invoke(param);
+
+                        return;
+                    }
 
                     ActionArray[i].Invoke(param);
-
-                    return;
                 }
-
-                ActionArray[i].Invoke(param);
             }
         }
     }

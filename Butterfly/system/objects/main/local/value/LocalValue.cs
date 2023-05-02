@@ -4,7 +4,7 @@
     {
         public abstract class Value<ValueType> : Object, description.access.set.IValue
         {
-            protected ValueType localValue { private set; get; }
+            public ValueType localValue { private set; get; }
 
             private bool IsEmpty = true;
 
@@ -36,7 +36,7 @@
         {
             public abstract class Value<ValueType> : Object, description.access.set.IValue
             {
-                protected ValueType localValue { private set; get; }
+                public ValueType localValue { private set; get; }
 
                 private bool IsEmpty = true;
 

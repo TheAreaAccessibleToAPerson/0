@@ -12,313 +12,241 @@
 
     public class TestController : Controller.Thread
     {
-        IInput<string[]> sendingMessageInput;
+        IInput<string> inputSendingMessage;
+        IInput<string> inputSendingMessageToVIPClients;
+        IInput<string> inputSendingMessageToDefaultClients;
+        IInput<string> inputRequestInformation;
 
         protected override void Construction()
         {
-            // Рассылка сообщений всем подписавшимся.
-            sendingMessageInput = sending_message<string[]>();
+            listen_message<string>("Client is creating.")
+                .output_to((message) => { Console($"Обьект {message} отчитался о том что он был создан."); });
 
-            listen_message<int>()
-                .output_to((errorLocalValue) =>
-                {
-                    // Созданый обьект в методе Configurate() проверим переданые в него локальные 
-                    // данные и пощитал что такое значение не премлемо для нормальной работы.
-                    // Пересоздадим обьект с другими локальными данными.
-                    // В данный момент реализована ошибка если создастся обьект со схожим именем.
-                    // Поэтому изменим его имя.
-                    create_object<TestController2>(u++.ToString(), errorLocalValue + 100);
-                });
+            inputSendingMessage =  sending_message<string>("All clients sending message.");
+            inputSendingMessageToVIPClients = sending_message<string>("VIP clients sending message.");
+            inputSendingMessageToDefaultClients = sending_message<string>("Default clients sending message.");
+
+            inputRequestInformation = sending_message<string>();
 
             listen_echo<string>()
-                .output_to((value, returnResult) =>
-                {
-                    Console($"Получение значение в echo:{value} от клиента с ID:{returnResult.GetObjectID()}.");
+                .output_to(l_obj<ClientsInformation>().ReceiveEcho, 1, 11); // Входные данные перехватываются в отдельный поток.
+        }
 
-                    //Вышлем в ответ 
-                    returnResult.To("Отразившийся echo.");
-                }, 1000, 10); // Подпишимся в пулл. Данный метод продолжит свое выполнение в другом потоке.
-                              // данный пулл будет расчитан на 1000 участников. При переполении пула создастся новый
-                              // и если все клинты отпишутся из него отчего он окажется пустым, пул уничтожится.
-                              // В данный момент не релизовано равномерное распределение клинтов между пулами.
+        void Start()
+        {
+            Console("\n\n\n\n\n Здравствуй. В данной системе заложена неплохая как мне кажется архетектура, но из за того что это первый проект такого плана," +
+                "сдесь хватает плохого кода, я всеволишь совершенсвую свои навыки. В данном примере нету главной особености это системы , она работает, но еще не тестировалась," +
+                "так что будем считать что ее нету. Если есть какие то советы, или просто обратный отклик dima1994zzz@gmail.com, заранее спасибо.\n\n\n\n\n");
 
-            listen_echo<string, int>() // Сдесь примим данные из echo.
-                .output_to((value, returnResult) => 
-                { 
-                    if (value == "Input1")
+            add_thread("Process", Process, 111, Thread.Priority.Normal);
+        }
+
+        global::System.Collections.Generic.Dictionary<string, Client> Clients 
+            = new global::System.Collections.Generic.Dictionary<string, Client>();
+
+        void Process()
+        {
+            Console($"Создать клинта: 1");
+            Console($"Уничтожить клинта:2");
+            Console($"Разаслать сообщения всем клинтам: 3");
+            Console($"Разаслать сообщения всем VIP клинтам: 4");
+            Console($"Разаслать сообщения всем Default клинтам: 5");
+            Console($"Разослать всем клинтам задание узнать актуальную информацию для своей группы: 6");
+            Console($"Создать обьект который не сможет запустится: 11");
+            Console($"Уничтожить систему: 111");
+
+            string processType = System.Console.ReadLine();
+
+            switch(processType)
+            {
+                case "1":
+
+                    string creatingClientName = ReadLine("Введите имя клиента:");
+
+                    if (Clients.ContainsKey(creatingClientName)) Clients.Remove(creatingClientName);
+
+                    while (true)
                     {
-                        returnResult.To(1);
+                        string groupName = ReadLine($"Введите номер группы в которую вы хотите поместить клиeнта. \n1)Default \n2)VIP \n");
+
+                        if (groupName == "1")
+                        {
+                            Clients.Add(creatingClientName, create_object<Client>(creatingClientName, "Default"));
+                            break;
+                        }
+                        else if (groupName == "2")
+                        {
+                            Clients.Add(creatingClientName, create_object<Client>(creatingClientName, "VIP"));
+                            break;
+                        }
+                        else
+                            Console($"Вы ввели некоректный номер группы, {groupName} данного номера группы не сущесвует.");
                     }
-                    else if (value == "Input2")
+                    
+                    break;
+
+                case "2":
+
+                    string deleteClientName = ReadLine("Введите имя клиента:");
+
+                    if (try_delete_object<Client>(deleteClientName))
                     {
-                        returnResult.To(2);
+                        Console("delete client....");
                     }
-                });
+                    else
+                        Console($"Клиента с именем {deleteClientName} не сущесвует.");
 
-            listen_echo<int>()
-                .output_to((number, returnResult) => 
+                    break;
+
+                case "3":
+
+                    string message1 = ReadLine("Введите сообщение которое нужно разослать всем клиетам:");
+                    inputSendingMessage.ToInput(message1);
+
+                    break;
+                case "4":
+
+                    string message2 = ReadLine("Введите сообщение которое нужно разослать VIP клиетам:");
+                    inputSendingMessageToVIPClients.ToInput(message2);
+
+                    break;
+                case "5":
+
+                    string message3 = ReadLine("Введите сообщение которое нужно разослать Default клиетам:");
+                    inputSendingMessageToDefaultClients.ToInput(message3);
+
+                    break;
+                case "6":
+
+                    inputRequestInformation.ToInput("info");
+
+                    break;
+                case "11":
+                    create_object<ClientDestroying>("");
+                    break;
+                case "111":
+
+                    SystemInformation("ReadLine заблокировало поток незабудь нажать Enter.", System.ConsoleColor.Red);
+                    destroy();
+
+                    break;
+            }
+        }
+    }
+
+    public class Client : Controller.Local.value<string>.Independent
+    {
+        IInput<string> inputSendMessage;
+
+        protected override void Construction()
+        {
+            send_message<string>(ref inputSendMessage, "Client is creating.");
+
+            listening_messages<string>("All clients sending message.")
+                .output_to((message) => Console(message));
+
+            listening_messages<TestController, string>()
+                .output_to((message) =>
                 {
-                    returnResult.To(222);
-                });
-        }
+                    if (message == "info")
+                        return localValue;
 
-        
-        void Start()
-        {
-            // Создадим клиeнтов, эмитируем их подключение. Данный метод предназначен для тестирования
-            // отдельных частей системы. Но если сильно хочется можно и реализовать на нем что либо.
-            add_thread("CreatingController", CreatingControllers, 1, Thread.Priority.Lowest);
-        }
+                    return "";
+                })
+                .output_to_echo<TestController, string>()
+                    .output_to((message) => { Console($"Текущeq актуальной информацией для {GetKey()} является {message}."); });
 
-        int u = 0;
-        void CreatingControllers() // Создадим билибирдень.
-        {
-            if (u < 1) // Создадим 50 индивидуальных обьектов. При вызове метода destroy() в нем или его дочерних обьектах
-                        // произойдет уничтожение плодь до данного обьекта TestController2 ...
+
+            if (localValue == "VIP")
             {
-                for (int i = 0; i < 1; i++)
-                {
-                    // так же передадим ему локальное значение.
-                    create_object<TestController2>(u++.ToString(), i + 100);
-                }
-                
+                listening_messages<string>("VIP clients sending message.")
+                    .output_to(MessageProcessing)
+                        .output_to(ShowMessage);
             }
-
-            // Будем инкрементировать каждый шаг.
-            u++;
-
-            if (u > 2) // так же создадим простых обьектов, при их уничтжение иничтожатся все обьекты до ближайшего Independent
-                         // обьекта, который в данный момент является сама система.
+            else if (localValue == "Default")
             {
-                // Создадим обьект который уничтожит все.
-                create_object<TestController3>(u++.ToString());
-            }
-
-            sendingMessageInput.ToInput(new string[] { "Input1", "Input2", "Input3", "Input3" });
-        }
-    }
-
-    public class TestController2 : Controller.Local.value<int>.Independent
-    {
-        IInput<int> sendMesageErrorConfigurate;
-        IInput<int> sendEchoToParent;
-        protected override void Construction()
-        {
-            send_message<TestController, int>(ref sendMesageErrorConfigurate);
-
-            send_echo<TestController, int>(ref sendEchoToParent)
-                .output_to((number) => { Console("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"); });
-
-            // Подпишимся на рассылку сообщений, это можно было бы сделать
-            // из самого обработчика, но в данном контексте обработчик используется
-            // по назначению что бы продемонстрировать синхроную и асинхроную работу.
-            listening_messages<TestController, string[]>()
-                .output_to<TestHandler1>(1000, 10) // Вывеод перехватит отдельный поток.
-                    .output_to<int>((number) =>
-                    {
-                        //Console(number.ToString());
-                    });
-        }
-
-        void Start()
-        {
-            sendEchoToParent.ToInput(localValue);
-        }
-
-        void Configurate() // Даный метод вызовется после метода Construction().
-        {
-            if (localValue == 120 || localValue == 130 || localValue == 150)
-            {
-                // Если локальное значение равно 120 тогда уничтожим данный обьект.
-                // Его метод Start не вызовется. 
-                // Eсли обьект не удалось создать оповестим об этом его родителя и он создаст новый обьект и передаст туда
-                // отлитный от текущих локальные данные.
-                sendMesageErrorConfigurate.ToInput(localValue);
-                // После чего уничтожим обьект.
-                destroy();
-                // Вызовется метод Stop...
-            }
-            
-            if (localValue == 220)
-            {
-                Console("Пересоздался наш ранее уничтоженый обьект.");
+                listening_messages<string>("Default clients sending message.")
+                    .output_to(MessageProcessing)
+                        .output_to(ShowMessage);
             }
         }
 
-        void Stop()
-        {
-        }
-    }
-
-    public class TestHandler1 : Handler<string[], int> // Данный обьект разрабатывается для синхроной и асинхроной абработки массивов, но можно и просто использовать. 
-    {
-        // Каждый input примит входные данные в текущий обработчик.
-        protected override void Construction()
-        {
-            input_to((values) => { return values[0]; })
-                .async_output_to_echo<TestController, int>()    // После отправки echo цепочка событий в текущем input_to прервется
-                    .await(l_obj<LocalObjectTest>().Add)        // и за окончание данной цепочки будет отвечать поток который пришлет сюда данные.
-                        .output_to(output);                     // Не дожидаясь ответа продолжатся выполнятся следующие input_to в текущем потоке.
-                                                                // (ранее при создании данного обработчкика мы выставиили все его input_to в отдельный поток)
-
-            input_to((values) => { return values[1]; })
-                .output_to_echo<TestController, int>()          // После того как будет отправлена сообщение цепочка событий во всем обработчике прервется.
-                    .output_to(l_obj<LocalObjectTest>().Add)    // А продолжется только после того как придет ответ и текущий input_to закончит свою
-                        .output_to(output);                     // работу. За продолжение работы не только этой но и последующих цепочек отвечает поток
-                                                                // который пришлет ответ на запрос.
-
-            // async_input_to_echo(); так же можем переоправить все входные параметры в эхо.
-            // Если мы работаем с протаколами или просто выделили поток под обработку определеного вида массивов можно выстать туда массив
-            // и уже после закончить работу с ним сдесь. 
-            // Возможно гдето я упистил реализацию интерфейса но во всем проекте весте output_to и input_to можно прехватить
-            // В отдельным пулл потоков.
-            input_to((values) => {  }, 1000, 10, "POLL");    // Теперь эти 3 метода будут работать в одном пуле.
-            input_to((values) => {  }, 1000, 10, "POLL");    // Текущий поток будет доставлять данные до данного места
-            input_to((values) => {  }, 1000, 10, "POLL");    // и за дальнейшую их работу будет отвечать пулл под именем "POLL".
-
-            input_to((values) => { return values[1]; })
-                .output_to_echo<TestController, int>()          
-                    .output_to(l_obj<LocalObjectTest>().Add, 1000, 10, "POLL") // Как было было сказано ранее когда доставляется ответ из echo запроса, закончить цепочку событий    
-                        .output_to(output);                                    // Должен поток который отвечает за доставку данных.
-                                                                               // Но мы можем перехватить данные ... например в пулл потока "POLL".
-
-            // Как можно заметить я везде выставляю одинаковый данные для создоваемого пулла. Его максимальное количесво учасников и timeDelay, к сажелению я еще ненашел более красивого
-            // решения. Одно решение это повторно реализовать все интерфейсы но без этих двух параметров.
-
-            // Так же можно указать вывод данных .output_to(output) а иммено куда этот вывод должен вывести данные. Опять же не реализован внутрений send_message.
-            // Только вывод в echo или другой action или func или обработчик. В данном примере мы реализовали вывод с помощью внешнего вызова .output_to в классе TestController2.
-            // поэтому метод .output_to(output) выведет результат туда.
-            //async_output_to_echo<TestController, int>()
-            //      .await((value) => { Console("!!!!"); });
-        }
-    }
-
-    public class TestHandler2 : Handler<string[], int>
-    {
-        protected override void Construction()
-        {
-        }
-    }
-
-    public class LocalObjectTest : ILocalObject, ILocalObject.Start.After
-    {
-        private readonly object Locker = new object();
-
-        private int i;
-
-        public int Add(int number)
-        {
-            lock(Locker) return i += number;
-        }
-
-        void ILocalObject.Start.After.Start()
-        {
-            
-        }
-    }
-
-    // Данный обьект уничтожит все и систему в том числе.
-    public class TestController3 : Controller
-    {
-        protected override void Construction()
-        {
-            //add_handler<Handler1, int>("HANDLER");
-        }
         void Start()
         {
-            destroy();
+            SystemInformation($"Client [{GetKey()}] creating.", System.ConsoleColor.Cyan);
+
+            inputSendMessage.ToInput($"Key:{GetKey()}, Group:{localValue}");
+        }
+
+        string MessageProcessing(string message)
+        {
+            if (localValue == "VIP")
+                return $"Получено сообщение для VIP : {message}";
+            else if (localValue == "Default")
+                return $"Получено сообщение для Default : {message}";
+
+            return "";
+        }
+
+        void ShowMessage(string message)
+        {
+            Console(message);
         }
     }
 
-    public class Handler1 : Handler<int>
+    public class ClientsInformation : ILocalObject, ILocalObject.ReceiveEcho<string, string>
     {
-        protected override void Construction()
+        string VIPInformation = "[ВНИМАНИЕ ИНФОРМАЦИЯ: Ты VIP пользователь!!!!!!!!!!!!!]";
+        string DefaultInformation = "[ВНИМАНИЕ ИНФОРМАЦИЯ: Ты простой пользователь!!!!!!!!!!!!!]";
+
+
+        public void ReceiveEcho(string value, IEchoReturn<string> send)
         {
-            
-        }
-        void Start()
-        {
-            deferred_create_object<TestController5>("KDJFKDJ");
+            if (value == "VIP")
+            {
+                send.To(VIPInformation);
+            }
+            else if (value == "Default")
+            {
+                send.To(DefaultInformation);
+            }
         }
     }
 
-    public class TestController5 : Controller
+    public class ClientDestroying : Controller.Independent
     {
         protected override void Construction()
         {
+            add_handler<TestHandler, int>();
         }
 
         void Start()
         {
-            deferred_create_object<TestController6>("KDJFKDJ");
-        }
-    }
 
-    public class TestController6 : Controller
-    {
-        protected override void Construction()
-        {
-        }
-
-        int u = 0;
-        void Start()
-        {
-            deferred_create_object<TestController7>(u++.ToString());
-            deferred_create_object<TestController7>(u++.ToString());
-            deferred_create_object<TestController7>(u++.ToString());
-            deferred_create_object<TestController7>(u++.ToString());
-            deferred_create_object<TestController7>(u++.ToString());
-            deferred_create_object<TestController7>(u++.ToString());
-            deferred_create_object<TestController7>(u++.ToString());
-
-            destroy();
-        }
-    }
-
-    public class TestController7 : Controller
-    {
-        protected override void Construction()
-        {
-            obj<TestController8>(1.ToString());
-            obj<TestController8>(2.ToString());
-            obj<TestController8>(3.ToString());
-            obj<TestController8>(4.ToString());
-            obj<TestController8>(5.ToString());
         }
 
         void Configurate()
         {
+            Console("В конфигурационом методе был запущен процес уничтожения, от чего не будет запущен метод Start(), но будет запущен метод Stop().");
             destroy();
-        }
-    }
-
-    public class TestController8 : Controller
-    {
-        IInput<int> input1, input2, input3, input4;
-        protected override void Construction()
-        {
-            add_handler<TestHandler77, int>(ref input1, "TestHandler1");
-            add_handler<TestHandler77, int>(ref input2, "TestHandler2");
-            add_handler<TestHandler77, int>(ref input3, "TestHandler3");
-            add_handler<TestHandler77, int>(ref input4, "TestHandler4");
         }
 
         void Stop()
         {
-            destroy();
+
         }
     }
 
-    public class TestHandler77 : Handler<int, int>
+    public class TestHandler : Handler<int>
     {
         protected override void Construction()
         {
-            input_to(output);
+            
         }
 
         void Start()
         {
-            destroy();
+
         }
     }
 }

@@ -24,7 +24,7 @@
         /// <summary>
         /// Это место прияма данных у прослушивающего echo.
         /// </summary>
-        private readonly System.Action<ReceiveValueType, Object<ReceiveValueType, ReturnValueType>> Action, Event;
+        private readonly System.Action<ReceiveValueType, Object<ReceiveValueType, ReturnValueType>> Action;
 
         /// <summary>
         /// Тип возрата значения. Если тип Continue, то значения просто вернутся в нужную точку.
@@ -61,6 +61,8 @@
             ContinueExecutingEvents = pContinueExecutingEvents;
             NumberOfTheInterruptedEvent = pNumberOfTheInterruptedEvent;
 
+            Console(pActionReturnType.ToString() + "!!!!!!!!!!!!!!!!!!!!!!!");
+
             ID = GetUniqueID();
 
             if (pActionReturnType.HasFlag(Type.Break))
@@ -75,10 +77,9 @@
                 pStateInformation, pNodeAccess, pPrivateHandlerAccess, pSharedObjectsAccess, pDependencyAccess, pInforming, pPollAccess);
             }
                 
-
             StateInformation = pStateInformation;
 
-            Event = Action = pActionReceiveEcho;
+            Action = pActionReceiveEcho;
         }
 
         public void SafeTo(ReturnValueType pValue)
@@ -99,7 +100,6 @@
             {
                 if (StateInformation.IsStarting || StateInformation.StartProcess && StateInformation.IsDestroy == false)
                 {
-                    // Продолжаем цепочку операций для async/await.
                     OutputValueManager.Action.Invoke(pValue);
                 }
             }
@@ -127,9 +127,7 @@
         handler.description.IRestream<ReturnValueType> handler.description.IAsyncRestream<ReturnValueType>.await
             (global::System.Action<ReturnValueType> pAction, int pPollSize = 0, int pTimeDelay = 0, string pPollName = "")
         {
-            OutputValueManager.AddAction(pAction, pPollSize, pTimeDelay, pPollName);
-
-            return this;
+            return OutputValueManager.AddAction(pAction, pPollSize, pTimeDelay, pPollName);
         }
         handler.description.IRestream<OutputValueType> handler.description.IAsyncRestream<ReturnValueType>.await<OutputValueType>
             (global::System.Func<ReturnValueType, OutputValueType> pFunc, int pPollSize = 0, int pTimeDelay = 0, string pPollName = "")
@@ -157,9 +155,7 @@
         handler.description.IRestream<ReturnValueType> handler.description.IRestream<ReturnValueType>.output_to
             (global::System.Action<ReturnValueType> pAction, int pPollSize = 0, int pTimeDelay = 0, string pPollName = "")
         {
-            OutputValueManager.AddAction(pAction, pPollSize, pTimeDelay, pPollName);
-
-            return this;
+            return OutputValueManager.AddAction(pAction, pPollSize, pTimeDelay, pPollName);
         }
 
         handler.description.IRestream handler.description.IRestream<ReturnValueType>.output_to<PrivateHandlerType>
@@ -180,7 +176,8 @@
             OutputValueManager.AddAction(pPublicHandler.Invoke().ToInput, pPollSize, pTimeDelay, pPollName);
         }
 
-        void handler.description.IRestream<ReturnValueType>.output_to<PublicHandlerType>(global::System.Func<string, PublicHandlerType> pPublicHandler,
+        void handler.description.IRestream<ReturnValueType>.output_to<PublicHandlerType>
+            (global::System.Func<string, PublicHandlerType> pPublicHandler,
             string pPublicHandlerName, int pPollSize = 0, int pTimeDelay = 0, string pPollName = "")
         {
             OutputValueManager.AddAction(pPublicHandler.Invoke(pPublicHandlerName).ToInput, pPollSize, pTimeDelay, pPollName);
