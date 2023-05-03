@@ -20,7 +20,7 @@
         protected override void Construction()
         {
             listen_message<string>("Client is creating.")
-                .output_to((message) => { Console($"Обьект {message} отчитался о том что он был создан."); });
+                .output_to((message) => { Console($"Обьект {message} отчитался о том что он был создан."); }, 1, 5, "Poll:Listen");
 
             inputSendingMessage =  sending_message<string>("All clients sending message.");
             inputSendingMessageToVIPClients = sending_message<string>("VIP clients sending message.");
@@ -91,6 +91,8 @@
 
                     if (try_delete_object<Client>(deleteClientName))
                     {
+                        Clients.Remove(deleteClientName);
+
                         Console("delete client....");
                     }
                     else
@@ -199,7 +201,6 @@
         string VIPInformation = "[ВНИМАНИЕ ИНФОРМАЦИЯ: Ты VIP пользователь!!!!!!!!!!!!!]";
         string DefaultInformation = "[ВНИМАНИЕ ИНФОРМАЦИЯ: Ты простой пользователь!!!!!!!!!!!!!]";
 
-
         public void ReceiveEcho(string value, IEchoReturn<string> send)
         {
             if (value == "VIP")
@@ -217,7 +218,7 @@
     {
         protected override void Construction()
         {
-            add_handler<TestHandler, int>();
+            add_handler<TestHandler, string[]>();
         }
 
         void Start()
@@ -237,16 +238,13 @@
         }
     }
 
-    public class TestHandler : Handler<int>
+    public class TestHandler : Handler<string[]>
     {
         protected override void Construction()
         {
-            
         }
 
         void Start()
-        {
-
-        }
+        {}
     }
 }

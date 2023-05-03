@@ -31,13 +31,7 @@
         /// Если тип Break, то после возрата значений в нужную точку мы завершим все оставшиеся события.
         /// </summary>
         private Type ActionReturnType;
-        /// <summary>
-        /// Метод который в случае прерывание событий с помощью Break в используемом обьекте
-        /// хранит ссылку на метод который запускает эти события на продолжение выполнение.
-        /// Первый параметр это номер события после которого произошло прерывание.
-        /// </summary>
-        private readonly global::System.Action<int> ContinueExecutingEvents;
-        private readonly int NumberOfTheInterruptedEvent; // Номер прерваного события.
+
 
         private readonly main.information.State StateInformation;
         private readonly main.information.description.access.get.INode NodeAccess;
@@ -58,17 +52,12 @@
         {
             ActionReturnType = pActionReturnType;
 
-            ContinueExecutingEvents = pContinueExecutingEvents;
-            NumberOfTheInterruptedEvent = pNumberOfTheInterruptedEvent;
-
-            Console(pActionReturnType.ToString() + "!!!!!!!!!!!!!!!!!!!!!!!");
-
             ID = GetUniqueID();
 
             if (pActionReturnType.HasFlag(Type.Break))
             {
                 OutputValueManager = new manager.action.Object<ReturnValueType>(manager.events.events.Type.Broker,
-                    ContinueExecutingEvents, NumberOfTheInterruptedEvent,
+                    pContinueExecutingEvents, pNumberOfTheInterruptedEvent,
                     pStateInformation, pNodeAccess, pPrivateHandlerAccess, pSharedObjectsAccess, pDependencyAccess, pInforming, pPollAccess);
             }
             else
@@ -127,7 +116,7 @@
         handler.description.IRestream<ReturnValueType> handler.description.IAsyncRestream<ReturnValueType>.await
             (global::System.Action<ReturnValueType> pAction, int pPollSize = 0, int pTimeDelay = 0, string pPollName = "")
         {
-            return OutputValueManager.AddAction(pAction, pPollSize, pTimeDelay, pPollName);
+            return OutputValueManager.AddActionIsAsync(pAction, pPollSize, pTimeDelay, pPollName);
         }
         handler.description.IRestream<OutputValueType> handler.description.IAsyncRestream<ReturnValueType>.await<OutputValueType>
             (global::System.Func<ReturnValueType, OutputValueType> pFunc, int pPollSize = 0, int pTimeDelay = 0, string pPollName = "")

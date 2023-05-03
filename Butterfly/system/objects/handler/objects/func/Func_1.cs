@@ -181,9 +181,7 @@ namespace Butterfly.system.objects.handler.objects.func
         description.IRestream description.IRestream.await<ParamValueType>(global::System.Action<ParamValueType> pAction, 
             int pPollSize = 0, int pTimeDelay = 0, string pPollName = "")
         {
-            OutputActionManager.AddActionIsType(pAction, pPollSize, pTimeDelay, pPollName);
-
-            return this;
+            return OutputActionManager.AddActionIsType(pAction, pPollSize, pTimeDelay, pPollName);
         }
 
         description.IRestream<ReturnValueType> description.IRestream.await<ReceiveValueType, ReturnValueType>

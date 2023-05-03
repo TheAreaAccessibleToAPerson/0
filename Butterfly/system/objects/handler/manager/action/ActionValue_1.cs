@@ -411,6 +411,8 @@
         public description.IAsyncRestream<ReturnValueType> AddConnectingToAsyncEcho<ReceiveValueType, ReturnValueType>(string pEchoName,
             int pPollSize, int pTimeDelay, string pPollName)
         {
+            IsContinueInterrupting = true;
+
             return CreatingConnectingToEcho<ReceiveValueType, ReturnValueType>
                 (pEchoName, events.Object<ParamType>.Type.Continue,
                     pPollSize, pTimeDelay, pPollName);
